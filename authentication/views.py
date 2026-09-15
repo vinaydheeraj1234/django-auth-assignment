@@ -84,3 +84,38 @@ class VerifyOTPView(generics.GenericAPIView):
         otp.delete()
 
         return Response({"message": "Registration successful. You can login now."})
+    
+class LoginView(generics.GenericAPIView):
+    serializer_class = LoginSerializer
+
+    def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data["email"].lower()
+        password = serializer.validated_data["password"]
+
+        # authenticate gives None if password is wrong or user is not active
+        user = authenticate(request, username=email, password=password)
+        if user is None:
+            return Response(
+                {"error": "Invalid email or password."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        user.last_login = timezone.now()
+        user.save(update_fields=["last_login"])
+
+        # delete old token and create a new one on every login
+        Token.objects.filter(user=user).delete()
+        token = Token.objects.create(user=user)
+
+        response = Response({"message": "Login successful."})
+        response.set_cookie(
+            "auth_token",
+            token.key,
+            max_age=60 * 60 * 24,  # 1 day
+            httponly=True,  # javascript can not read this cookie
+            secure=True,  # only sent over https (browsers allow localhost)
+            samesite="Lax",
+        )
+        return response
