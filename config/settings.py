@@ -123,15 +123,32 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-
 # Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# If EMAIL_USER and EMAIL_PASSWORD are in .env, real email is sent using Gmail.
+# Otherwise the email (with OTP) is printed in the terminal.
+EMAIL_USER = os.getenv("EMAIL_USER")
+EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
+DEFAULT_FROM_EMAIL = EMAIL_USER or "noreply@example.com"
 
-MAILERS = {
-    'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
-    },
-}
+if EMAIL_USER and EMAIL_PASSWORD:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+            "OPTIONS": {
+                "host": "smtp.gmail.com",
+                "port": 587,
+                "username": EMAIL_USER,
+                "password": EMAIL_PASSWORD,
+                "use_tls": True,
+            },
+        },
+    }
+else:
+    MAILERS = {
+        "default": {
+            "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        },
+    }
 
 # Swagger
 SWAGGER_SETTINGS = {
