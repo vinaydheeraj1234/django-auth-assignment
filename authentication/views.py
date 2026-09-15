@@ -119,3 +119,23 @@ class LoginView(generics.GenericAPIView):
             samesite="Lax",
         )
         return response
+    
+
+class MeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        # delete the token from database so old cookie stops working
+        request.auth.delete()
+
+        response = Response({"message": "Logged out successfully."})
+        response.delete_cookie("auth_token", samesite="Lax")
+        return response
