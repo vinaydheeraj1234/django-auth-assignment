@@ -139,3 +139,7 @@ class LogoutView(APIView):
         response = Response({"message": "Logged out successfully."})
         response.delete_cookie("auth_token", samesite="Lax")
         return response
+    
+@ensure_csrf_cookie
+def home(request):
+    return render(request, "index.html")

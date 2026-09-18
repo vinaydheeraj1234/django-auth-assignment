@@ -6,6 +6,8 @@ from drf_yasg.views import get_schema_view
 from rest_framework import permissions
 from django.urls import include, path
 
+from authentication.views import home
+
 schema_view = get_schema_view(
     openapi.Info(
         title="Authentication API",
@@ -17,6 +19,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    path("", home, name="home"),
     path("admin/", admin.site.urls),
      path("api/", include("authentication.urls")),
     path(
